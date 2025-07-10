@@ -52,4 +52,16 @@ Ensure the `tesseract` executable is in your `PATH`. On some systems you may nee
 ## File Uploads
 
 Uploaded slip images are stored in the `uploads/` directory. The dashboard displays transactions extracted from these files.
+Only image files (`.png`, `.jpg`, `.jpeg`) or PDF documents can be uploaded and files larger than the configured limit will be rejected.
+
+## Configuration
+
+The application reads several settings from environment variables:
+
+- `UPLOAD_FOLDER` – directory for uploaded files (default: `uploads/`).
+- `DB_URI` – SQLAlchemy database URI (default: `sqlite:///database.db`).
+- `SECRET_KEY` – Flask secret key used for sessions.
+- `MAX_CONTENT_LENGTH` – maximum allowed upload size in bytes (default: 5 MB).
+
+If these variables are not provided the defaults above are used.
 
