@@ -168,7 +168,7 @@ def uploaded_file(filename):
 
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
-@app.route('/users')
+@app.route('/user')
 def user_list():
     user_id = session.get("user_id")
     session_db = Session()
