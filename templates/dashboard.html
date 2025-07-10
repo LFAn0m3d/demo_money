@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}แดชบอร์ด{% endblock %}
+{% block content %}
+<h3>📊 รายการธุรกรรมของคุณ</h3>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>วันที่</th>
+      <th>ชื่อผู้โอน</th>
+      <th>ชื่อผู้รับ</th>
+      <th>ยอดเงิน</th>
+      <th>Risk Score</th>
+      <th>ดาวน์โหลด</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for tx in transactions %}
+    <tr>
+      <td>{{ tx.date_str }}</td>
+      <td>{{ tx.sender }}</td>
+      <td>{{ tx.receiver }}</td>
+      <td>{{ tx.amount }}</td>
+      <td>{{ tx.risk_score }}</td>
+      <td>
+        {% if tx.filename %}
+        <a href="/uploads/{{ tx.filename }}" class="btn btn-sm btn-outline-primary">ดาวน์โหลด</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

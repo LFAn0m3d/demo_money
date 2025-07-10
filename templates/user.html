@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}ผู้ใช้งานทั้งหมด{% endblock %}
+{% block content %}
+<h3>👥 รายชื่อผู้ใช้งาน</h3>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>ชื่อผู้ใช้</th>
+      <th>อีเมล</th>
+      <th>บทบาท</th>
+      <th>สมัครเมื่อ</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ user.username }}</td>
+      <td>{{ user.email }}</td>
+      <td>
+        {% if user.is_admin %}
+        <span class="badge bg-danger">แอดมิน</span>
+        {% else %}
+        <span class="badge bg-secondary">ผู้ใช้ทั่วไป</span>
+        {% endif %}
+      </td>
+      <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
