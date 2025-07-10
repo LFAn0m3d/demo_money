@@ -1,6 +1,7 @@
-flask
-flask-wtf
-sqlalchemy
-pdf2image
+Flask
+SQLAlchemy
+Flask-WTF
 opencv-python
 pytesseract
+pdf2image
+Pillow
