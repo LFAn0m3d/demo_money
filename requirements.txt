@@ -1,0 +1,6 @@
+flask
+flask-wtf
+sqlalchemy
+pdf2image
+opencv-python
+pytesseract
