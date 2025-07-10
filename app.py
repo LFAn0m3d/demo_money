@@ -178,7 +178,7 @@ def user_list():
         return "คุณไม่มีสิทธิ์เข้าถึงหน้านี้", 403
     users = session_db.query(User).order_by(User.created_at.desc()).all()
     session_db.close()
-    return render_template("users.html", users=users, is_admin=True)
+    return render_template("user.html", users=users, is_admin=True)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
