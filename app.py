@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, s
 import os, random, re
 import cv2
 import pytesseract
+import magic
 from uuid import uuid4
 from werkzeug.utils import secure_filename
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey, create_engine
@@ -19,6 +20,9 @@ DB_PATH = os.getenv('DB_URI', 'sqlite:///database.db')
 SECRET_KEY = os.getenv('SECRET_KEY', 'supersecretkey')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
+ALLOWED_MIME_TYPES = {
+    'image/png', 'image/jpeg', 'image/jpg', 'application/pdf'
+}
 MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 5 * 1024 * 1024))  # 5MB
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -133,6 +137,11 @@ def index():
                 error_msg = 'ไม่ได้เลือกไฟล์'
             elif not allowed_file(file.filename):
                 error_msg = 'ประเภทไฟล์ไม่รองรับ'
+            else:
+                mime_type = magic.from_buffer(file.stream.read(2048), mime=True)
+                file.stream.seek(0)
+                if mime_type not in ALLOWED_MIME_TYPES:
+                    error_msg = 'ประเภทไฟล์ไม่รองรับ'
 
         if error_msg is None:
             original_filename = secure_filename(file.filename)

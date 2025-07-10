@@ -5,3 +5,4 @@ opencv-python
 pytesseract
 pdf2image
 Pillow
+python-magic
