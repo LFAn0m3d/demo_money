@@ -11,7 +11,9 @@ Money Guardian is a Flask application that extracts information from bank slip i
 pip install -r requirements.txt
 ```
 
-### System Dependencies
+3. Install the OCR system packages (`tesseract-ocr` and `poppler-utils`).
+
+### Required OCR System Packages
 
 - **Tesseract OCR**: required for text extraction.
   - Ubuntu/Debian:
@@ -64,4 +66,22 @@ The application reads several settings from environment variables:
 - `MAX_CONTENT_LENGTH` – maximum allowed upload size in bytes (default: 5 MB).
 
 If these variables are not provided the defaults above are used.
+
+## Production Deployment
+
+For a production environment run the Flask application with an application server such as **Gunicorn** or **uWSGI**. Place the server behind a reverse proxy (e.g. Nginx or Apache) and terminate TLS at the proxy.
+
+### Example using Gunicorn
+
+```bash
+gunicorn -w 4 -b 0.0.0.0:8000 app:app
+```
+
+### Example using uWSGI
+
+```bash
+uwsgi --http-socket 0.0.0.0:8000 --module app:app --master --processes 4 --threads 2
+```
+
+The reverse proxy should handle HTTPS and forward requests to the application server.
 
