@@ -35,7 +35,7 @@ pip install -r requirements.txt
     brew install poppler
     ```
 
-Ensure the `tesseract` executable is in your `PATH`. On some systems you may need to specify the path in `pytesseract.pytesseract.tesseract_cmd`.
+Ensure the `tesseract` executable is in your `PATH`. Alternatively set `TESSERACT_CMD` to the full executable path and the application will use it automatically.
 If these packages are missing the upload page will display an error about missing OCR dependencies.
 
 ## Running the Application
