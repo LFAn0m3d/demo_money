@@ -20,10 +20,14 @@ pip install -r requirements.txt
   - Ubuntu/Debian:
     ```bash
     sudo apt-get install tesseract-ocr
+    # Install Thai/English language data used by the app
+    sudo apt-get install tesseract-ocr-tha tesseract-ocr-eng
     ```
   - macOS (Homebrew):
     ```bash
     brew install tesseract
+    # Optional: install additional languages
+    brew install tesseract-lang
     ```
 - **Poppler**: required by `pdf2image` to convert PDF files.
   - Ubuntu/Debian:
