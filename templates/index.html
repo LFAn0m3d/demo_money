@@ -1,34 +1,50 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h3>📤 อัปโหลดสลิป</h3>
-<form method="POST" enctype="multipart/form-data">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <div class="mb-3">
-    <input class="form-control" type="file" name="file" required>
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h4 class="card-title mb-3">📤 อัปโหลดสลิป</h4>
+        <form method="POST" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <input class="form-control" type="file" name="file" required>
+          </div>
+          <button class="btn btn-primary w-100" type="submit">🚀 วิเคราะห์</button>
+        </form>
+        {% if error %}
+          <div class="alert alert-danger mt-3">{{ error }}</div>
+        {% endif %}
+      </div>
+    </div>
   </div>
-  <button class="btn btn-primary" type="submit">🚀 วิเคราะห์</button>
-</form>
-{% if error %}
-  <div class="alert alert-danger mt-3">{{ error }}</div>
-{% endif %}
+</div>
 
 {% if result %}
-  <hr>
-  <h5>📄 ผลลัพธ์จาก OCR:</h5>
-  <ul class="list-group">
-    <li class="list-group-item">👤 ผู้โอน: {{ result.sender_name }}</li>
-    <li class="list-group-item">🎯 ผู้รับ: {{ result.receiver_name }}</li>
-    <li class="list-group-item">🏦 ธนาคาร: {{ result.bank_name }}</li>
-    <li class="list-group-item">💳 บัญชีจาก: {{ result.from_account }}</li>
-    <li class="list-group-item">➡️ บัญชีไปยัง: {{ result.to_account }}</li>
-    <li class="list-group-item">📅 วันที่: {{ result.date }} ⏰ เวลา: {{ result.time }}</li>
-    <li class="list-group-item">💰 จำนวนเงิน: {{ result.amount }}</li>
-    <li class="list-group-item">📊 ความเสี่ยง: {{ result.risk_score }}</li>
-  </ul>
-  <div class="mt-4">
-    <label>📄 ข้อความเต็มจาก OCR:</label>
-    <pre class="bg-light p-3 border rounded">{{ result.raw_text }}</pre>
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">📄 ผลลัพธ์จาก OCR:</h5>
+        <ul class="list-group">
+          <li class="list-group-item">👤 ผู้โอน: {{ result.sender_name }}</li>
+          <li class="list-group-item">🎯 ผู้รับ: {{ result.receiver_name }}</li>
+          <li class="list-group-item">🏦 ธนาคาร: {{ result.bank_name }}</li>
+          <li class="list-group-item">💳 บัญชีจาก: {{ result.from_account }}</li>
+          <li class="list-group-item">➡️ บัญชีไปยัง: {{ result.to_account }}</li>
+          <li class="list-group-item">📅 วันที่: {{ result.date }} ⏰ เวลา: {{ result.time }}</li>
+          <li class="list-group-item">💰 จำนวนเงิน: {{ result.amount }}</li>
+          <li class="list-group-item">📊 ความเสี่ยง: {{ result.risk_score }}</li>
+        </ul>
+        <div class="mt-4">
+          <label>📄 ข้อความเต็มจาก OCR:</label>
+          <pre class="bg-light p-3 border rounded">{{ result.raw_text }}</pre>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 {% endif %}
 {% endblock %}
+
