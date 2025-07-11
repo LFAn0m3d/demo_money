@@ -69,6 +69,15 @@ engine = create_engine(DB_PATH)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
+def parse_amount(raw):
+    """Convert extracted amount string to a float."""
+    if not raw:
+        return None
+    try:
+        return float(raw.replace(',', ''))
+    except Exception:
+        return None
+
 # === OCR Utility ===
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -175,25 +184,21 @@ def index():
                 risk_score = calculate_risk(data)
                 user_id = session.get("user_id")
 
-                try:
-                    amount_val = float(data["amount"].replace(',', '')) if data.get("amount") else None
-                except Exception:
-                    amount_val = None
+                amount_val = parse_amount(data.get("amount"))
 
-                session_db = Session()
-                tx = Transaction(
-                    user_id=user_id,
-                    sender=data.get("sender_name"),
-                    receiver=data.get("receiver_name"),
-                    amount=amount_val,
-                    date_str=data.get("date"),
-                    raw_text=data.get("raw_text"),
-                    risk_score=risk_score,
-                    filename=unique_filename
-                )
-                session_db.add(tx)
-                session_db.commit()
-                session_db.close()
+                with Session() as session_db:
+                    tx = Transaction(
+                        user_id=user_id,
+                        sender=data.get("sender_name"),
+                        receiver=data.get("receiver_name"),
+                        amount=amount_val,
+                        date_str=data.get("date"),
+                        raw_text=data.get("raw_text"),
+                        risk_score=risk_score,
+                        filename=unique_filename
+                    )
+                    session_db.add(tx)
+                    session_db.commit()
 
                 result = {
                     'filename': unique_filename,
@@ -215,23 +220,21 @@ def index():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    session_db = Session()
     user_id = session.get('user_id')
     is_admin = session.get('is_admin')
-    if is_admin:
-        transactions = session_db.query(Transaction).order_by(Transaction.created_at.desc()).all()
-    else:
-        transactions = session_db.query(Transaction).filter_by(user_id=user_id).order_by(Transaction.created_at.desc()).all()
-    session_db.close()
+    with Session() as session_db:
+        if is_admin:
+            transactions = session_db.query(Transaction).order_by(Transaction.created_at.desc()).all()
+        else:
+            transactions = session_db.query(Transaction).filter_by(user_id=user_id).order_by(Transaction.created_at.desc()).all()
     return render_template('dashboard.html', transactions=transactions)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     user_id = session.get("user_id")
-    session_db = Session()
-    tx = session_db.query(Transaction).filter_by(filename=filename).first()
-    user = session_db.query(User).filter_by(id=user_id).first()
-    session_db.close()
+    with Session() as session_db:
+        tx = session_db.query(Transaction).filter_by(filename=filename).first()
+        user = session_db.query(User).filter_by(id=user_id).first()
 
     if not tx:
         return "ไม่พบสลิปนี้", 404
@@ -243,13 +246,11 @@ def uploaded_file(filename):
 @app.route('/user')
 def user_list():
     user_id = session.get("user_id")
-    session_db = Session()
-    user = session_db.query(User).filter_by(id=user_id).first()
-    if not user or not user.is_admin:
-        session_db.close()
-        return "คุณไม่มีสิทธิ์เข้าถึงหน้านี้", 403
-    users = session_db.query(User).order_by(User.created_at.desc()).all()
-    session_db.close()
+    with Session() as session_db:
+        user = session_db.query(User).filter_by(id=user_id).first()
+        if not user or not user.is_admin:
+            return "คุณไม่มีสิทธิ์เข้าถึงหน้านี้", 403
+        users = session_db.query(User).order_by(User.created_at.desc()).all()
     return render_template("user.html", users=users, is_admin=True)
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -261,15 +262,13 @@ def register():
         if not email:
             return 'กรุณากรอกอีเมล'
         hashed_pw = generate_password_hash(password)
-        session_db = Session()
-        existing_user = session_db.query(User).filter_by(username=username).first()
-        if existing_user:
-            session_db.close()
-            return 'Username already exists!'
-        new_user = User(username=username, password=hashed_pw, email=email, is_admin=False)
-        session_db.add(new_user)
-        session_db.commit()
-        session_db.close()
+        with Session() as session_db:
+            existing_user = session_db.query(User).filter_by(username=username).first()
+            if existing_user:
+                return 'Username already exists!'
+            new_user = User(username=username, password=hashed_pw, email=email, is_admin=False)
+            session_db.add(new_user)
+            session_db.commit()
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -278,9 +277,8 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        session_db = Session()
-        user = session_db.query(User).filter_by(username=username).first()
-        session_db.close()
+        with Session() as session_db:
+            user = session_db.query(User).filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
             session['username'] = user.username
