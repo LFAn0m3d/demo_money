@@ -3,11 +3,14 @@ import numpy as np
 
 try:
     import joblib
-    from sklearn.ensemble import IsolationForest
     from tensorflow.keras.models import load_model
 except Exception:  # modules might not be installed in some environments
     joblib = None
     load_model = None
+
+# Global variables to cache loaded models
+IFOREST = None
+AUTOENC = None
 
 MODEL_DIR = os.getenv('MODEL_DIR', 'models')
 IFOREST_PATH = os.path.join(MODEL_DIR, 'isolation_forest.pkl')
@@ -15,45 +18,59 @@ AUTOENCODER_PATH = os.path.join(MODEL_DIR, 'autoencoder.h5')
 
 
 def load_models():
-    """Load Isolation Forest and Autoencoder models if available."""
+    """Load Isolation Forest and Autoencoder models once."""
+    global IFOREST, AUTOENC
+
     if joblib is None or load_model is None:
-        return None, None
-    if not (os.path.exists(IFOREST_PATH) and os.path.exists(AUTOENCODER_PATH)):
-        return None, None
-    iforest = joblib.load(IFOREST_PATH)
-    autoenc = load_model(AUTOENCODER_PATH)
-    return iforest, autoenc
+        return
+
+    if not IFOREST and os.path.exists(IFOREST_PATH):
+        IFOREST = joblib.load(IFOREST_PATH)
+
+    if not AUTOENC and os.path.exists(AUTOENCODER_PATH):
+        AUTOENC = load_model(AUTOENCODER_PATH)
+
+
+def parse_amount(amount_str):
+    """Safely convert amount string to a float."""
+    try:
+        return float(str(amount_str).replace(',', '').strip())
+    except Exception:
+        return 0.0
 
 
 def _extract_features(data: dict):
-    """Extract simple numerical features from OCR data."""
-    try:
-        amount = float(data.get('amount', '0').replace(',', ''))
-    except Exception:
-        amount = 0.0
+    """Extract structured numerical features from OCR data."""
+    amount = parse_amount(data.get('amount', '0'))
     sender_len = len(data.get('sender_name') or '')
     receiver_len = len(data.get('receiver_name') or '')
     return [amount, sender_len, receiver_len]
 
 
 def calculate_risk(data: dict) -> float:
-    """Calculate risk score using Isolation Forest and Autoencoder models."""
+    """Calculate risk score using preloaded ML models."""
+    load_models()
     features = _extract_features(data)
-    iforest, autoenc = load_models()
     feats = np.array(features).reshape(1, -1)
 
-    if iforest is not None:
-        iso_score = -iforest.decision_function(feats)[0]
-        iso_score = (iso_score + 1) / 2
+    if IFOREST:
+        try:
+            iso_score = -IFOREST.decision_function(feats)[0]
+            iso_score = (iso_score + 1) / 2
+        except Exception:
+            iso_score = 0.5
     else:
         iso_score = 0.5
 
-    if autoenc is not None:
-        recon = autoenc.predict(feats, verbose=0)
-        mse = np.mean(np.square(feats - recon))
-        auto_score = mse / (mse + 1)
+    if AUTOENC:
+        try:
+            recon = AUTOENC.predict(feats, verbose=0)
+            mse = np.mean(np.square(feats - recon))
+            auto_score = mse / (mse + 1)
+        except Exception:
+            auto_score = 0.5
     else:
         auto_score = 0.5
 
     risk = (iso_score + auto_score) / 2
-    return round(float(risk), 2)
+    return round(risk, 2)
