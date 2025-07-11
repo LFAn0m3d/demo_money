@@ -6,3 +6,7 @@ pytesseract
 pdf2image
 Pillow
 python-magic
+numpy
+scikit-learn
+joblib
+tensorflow
