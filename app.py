@@ -11,6 +11,11 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Foreig
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
 from pdf2image import convert_from_path
+
+
+class OCRDependencyError(Exception):
+    """Raised when system OCR dependencies are missing."""
+    pass
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import CSRFProtect  # ✅ เพิ่ม CSRF protection
 from risk_model import calculate_risk
@@ -73,7 +78,12 @@ def process_slip_with_tesseract(image_path):
     try:
         path_to_read = image_path
         if image_path.lower().endswith('.pdf'):
-            images = convert_from_path(image_path, dpi=300)
+            try:
+                images = convert_from_path(image_path, dpi=300)
+            except Exception as e:
+                raise OCRDependencyError(
+                    "Poppler is required to handle PDF files. Please install poppler-utils."
+                ) from e
             if not images:
                 return {}
             temp_path = image_path + '_tmp.png'
@@ -92,7 +102,12 @@ def process_slip_with_tesseract(image_path):
             cv2.THRESH_BINARY, 31, 10
         )
         config = r'--oem 3 --psm 6 -l tha+eng'
-        text = pytesseract.image_to_string(thresh, config=config)
+        try:
+            text = pytesseract.image_to_string(thresh, config=config)
+        except Exception as e:
+            raise OCRDependencyError(
+                "Tesseract OCR is required for text extraction. Please ensure it is installed and in your PATH."
+            ) from e
         return extract_transaction_info(text)
     finally:
         if temp_path and os.path.exists(temp_path):
@@ -150,43 +165,49 @@ def index():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
             file.save(filepath)
 
-            data = process_slip_with_tesseract(filepath)
-            risk_score = calculate_risk(data)
-            user_id = session.get("user_id")
-
             try:
-                amount_val = float(data["amount"].replace(',', '')) if data.get("amount") else None
-            except Exception:
-                amount_val = None
+                data = process_slip_with_tesseract(filepath)
+            except OCRDependencyError as e:
+                os.remove(filepath)
+                error_msg = str(e)
+                data = None
+            if data is not None and error_msg is None:
+                risk_score = calculate_risk(data)
+                user_id = session.get("user_id")
 
-            session_db = Session()
-            tx = Transaction(
-                user_id=user_id,
-                sender=data.get("sender_name"),
-                receiver=data.get("receiver_name"),
-                amount=amount_val,
-                date_str=data.get("date"),
-                raw_text=data.get("raw_text"),
-                risk_score=risk_score,
-                filename=unique_filename
-            )
-            session_db.add(tx)
-            session_db.commit()
-            session_db.close()
+                try:
+                    amount_val = float(data["amount"].replace(',', '')) if data.get("amount") else None
+                except Exception:
+                    amount_val = None
 
-            result = {
-                'filename': unique_filename,
-                'risk_score': risk_score,
-                'amount': data.get('amount'),
-                'date': data.get('date'),
-                'time': data.get('time'),
-                'bank_name': data.get('bank_name'),
-                'sender_name': data.get('sender_name'),
-                'receiver_name': data.get('receiver_name'),
-                'from_account': data.get('from_account'),
-                'to_account': data.get('to_account'),
-                'raw_text': data.get('raw_text')
-            }
+                session_db = Session()
+                tx = Transaction(
+                    user_id=user_id,
+                    sender=data.get("sender_name"),
+                    receiver=data.get("receiver_name"),
+                    amount=amount_val,
+                    date_str=data.get("date"),
+                    raw_text=data.get("raw_text"),
+                    risk_score=risk_score,
+                    filename=unique_filename
+                )
+                session_db.add(tx)
+                session_db.commit()
+                session_db.close()
+
+                result = {
+                    'filename': unique_filename,
+                    'risk_score': risk_score,
+                    'amount': data.get('amount'),
+                    'date': data.get('date'),
+                    'time': data.get('time'),
+                    'bank_name': data.get('bank_name'),
+                    'sender_name': data.get('sender_name'),
+                    'receiver_name': data.get('receiver_name'),
+                    'from_account': data.get('from_account'),
+                    'to_account': data.get('to_account'),
+                    'raw_text': data.get('raw_text')
+                }
 
     return render_template('index.html', result=result, error=error_msg)
 

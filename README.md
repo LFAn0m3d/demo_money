@@ -12,7 +12,7 @@ pip install -r requirements.txt
 ```
    The list includes `scikit-learn` and `tensorflow` which are required for the risk models.
 
-3. Install the OCR system packages (`tesseract-ocr` and `poppler-utils`).
+3. Install the OCR system packages (`tesseract-ocr` and `poppler-utils`). These system tools are required by `pytesseract` and `pdf2image`.
 
 ### Required OCR System Packages
 
@@ -36,6 +36,7 @@ pip install -r requirements.txt
     ```
 
 Ensure the `tesseract` executable is in your `PATH`. On some systems you may need to specify the path in `pytesseract.pytesseract.tesseract_cmd`.
+If these packages are missing the upload page will display an error about missing OCR dependencies.
 
 ## Running the Application
 
