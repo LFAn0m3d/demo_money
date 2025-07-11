@@ -1,17 +1,26 @@
 {% extends "base.html" %}
 {% block title %}เข้าสู่ระบบ{% endblock %}
 {% block content %}
-<h3>🔐 เข้าสู่ระบบ</h3>
-<form method="POST">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <div class="mb-3">
-    <label>ชื่อผู้ใช้</label>
-    <input class="form-control" name="username" required>
+<div class="row justify-content-center">
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="mb-3 text-center">🔐 เข้าสู่ระบบ</h4>
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">ชื่อผู้ใช้</label>
+            <input class="form-control" name="username" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">รหัสผ่าน</label>
+            <input type="password" class="form-control" name="password" required>
+          </div>
+          <button class="btn btn-success w-100">เข้าสู่ระบบ</button>
+        </form>
+      </div>
+    </div>
   </div>
-  <div class="mb-3">
-    <label>รหัสผ่าน</label>
-    <input type="password" class="form-control" name="password" required>
-  </div>
-  <button class="btn btn-success">เข้าสู่ระบบ</button>
-</form>
+</div>
 {% endblock %}
+
