@@ -10,6 +10,7 @@ Money Guardian is a Flask application that extracts information from bank slip i
 ```bash
 pip install -r requirements.txt
 ```
+   The list includes `scikit-learn` and `tensorflow` which are required for the risk models.
 
 3. Install the OCR system packages (`tesseract-ocr` and `poppler-utils`).
 
@@ -55,6 +56,10 @@ Ensure the `tesseract` executable is in your `PATH`. On some systems you may nee
 
 Uploaded slip images are stored in the `uploads/` directory. The dashboard displays transactions extracted from these files.
 Only image files (`.png`, `.jpg`, `.jpeg`) or PDF documents can be uploaded and files larger than the configured limit will be rejected.
+
+## Risk Scoring Models
+
+Risk calculation combines an Isolation Forest and an Autoencoder model. Place trained model files in the `models/` directory as `isolation_forest.pkl` and `autoencoder.h5`. The application will fall back to a default score if the models or required machine learning libraries are unavailable.
 
 ## Configuration
 

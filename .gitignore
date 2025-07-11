@@ -119,6 +119,8 @@ database.db
 
 # Uploaded files
 uploads/
+models/*.pkl
+models/*.h5
 
 # OS generated files
 .DS_Store

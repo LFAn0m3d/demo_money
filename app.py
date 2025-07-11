@@ -1,7 +1,7 @@
 ### app.py (Production-ready Enhancements with CSRF)
 
 from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory
-import os, random, re
+import os, re
 import cv2
 import pytesseract
 import magic
@@ -13,6 +13,7 @@ from datetime import datetime
 from pdf2image import convert_from_path
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import CSRFProtect  # ✅ เพิ่ม CSRF protection
+from risk_model import calculate_risk
 
 # === CONFIG ===
 UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
@@ -150,7 +151,7 @@ def index():
             file.save(filepath)
 
             data = process_slip_with_tesseract(filepath)
-            dummy_risk_score = round(random.uniform(0.1, 0.99), 2)
+            risk_score = calculate_risk(data)
             user_id = session.get("user_id")
 
             try:
@@ -166,7 +167,7 @@ def index():
                 amount=amount_val,
                 date_str=data.get("date"),
                 raw_text=data.get("raw_text"),
-                risk_score=dummy_risk_score,
+                risk_score=risk_score,
                 filename=unique_filename
             )
             session_db.add(tx)
@@ -175,7 +176,7 @@ def index():
 
             result = {
                 'filename': unique_filename,
-                'risk_score': dummy_risk_score,
+                'risk_score': risk_score,
                 'amount': data.get('amount'),
                 'date': data.get('date'),
                 'time': data.get('time'),
