@@ -7,6 +7,11 @@ import io
 import cv2
 import pytesseract
 import magic
+
+# Configure tesseract executable path from environment
+TESSERACT_CMD = os.getenv('TESSERACT_CMD')
+if TESSERACT_CMD:
+    pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
 from uuid import uuid4
 from werkzeug.utils import secure_filename
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey, create_engine
