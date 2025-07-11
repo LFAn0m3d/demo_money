@@ -90,3 +90,8 @@ uwsgi --http-socket 0.0.0.0:8000 --module app:app --master --processes 4 --threa
 
 The reverse proxy should handle HTTPS and forward requests to the application server.
 
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
