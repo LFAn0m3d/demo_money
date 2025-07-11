@@ -90,6 +90,10 @@ uwsgi --http-socket 0.0.0.0:8000 --module app:app --master --processes 4 --threa
 ```
 
 The reverse proxy should handle HTTPS and forward requests to the application server.
+## Exporting Transactions
+
+Users can download their transactions as a CSV file from the dashboard. Click the **"ดาวน์โหลด CSV"** button to export. Administrators receive all transactions while normal users only see their own.
+
 
 
 ## License
