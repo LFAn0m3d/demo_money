@@ -1,7 +1,9 @@
 ### app.py (Production-ready Enhancements with CSRF)
 
-from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, make_response
 import os, re
+import csv
+import io
 import cv2
 import pytesseract
 import magic
@@ -228,6 +230,36 @@ def dashboard():
         else:
             transactions = session_db.query(Transaction).filter_by(user_id=user_id).order_by(Transaction.created_at.desc()).all()
     return render_template('dashboard.html', transactions=transactions)
+
+
+@app.route('/export')
+def export_transactions():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user_id = session.get('user_id')
+    is_admin = session.get('is_admin')
+    with Session() as session_db:
+        if is_admin:
+            transactions = session_db.query(Transaction).order_by(Transaction.created_at.desc()).all()
+        else:
+            transactions = session_db.query(Transaction).filter_by(user_id=user_id).order_by(Transaction.created_at.desc()).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['date', 'sender', 'receiver', 'amount', 'risk_score'])
+    for tx in transactions:
+        writer.writerow([
+            tx.date_str or '',
+            tx.sender or '',
+            tx.receiver or '',
+            tx.amount or '',
+            tx.risk_score or ''
+        ])
+
+    response = make_response(output.getvalue())
+    response.headers['Content-Disposition'] = 'attachment; filename=transactions.csv'
+    response.headers['Content-Type'] = 'text/csv'
+    return response
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):

@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block title %}แดชบอร์ด{% endblock %}
 {% block content %}
-<h3>📊 รายการธุรกรรมของคุณ</h3>
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h3 class="mb-0">📊 รายการธุรกรรมของคุณ</h3>
+  <a href="/export" class="btn btn-success btn-sm">ดาวน์โหลด CSV</a>
+</div>
 <table class="table table-striped">
   <thead>
     <tr>
