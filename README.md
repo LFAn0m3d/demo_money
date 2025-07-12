@@ -64,14 +64,13 @@ Risk calculation combines an Isolation Forest and an Autoencoder model. Place tr
 
 ## Configuration
 
-The application reads several settings from environment variables:
+Copy `.env.example` to `.env` and adjust the values as needed. The application reads several settings from environment variables:
 
 - `UPLOAD_FOLDER` – directory for uploaded files (default: `uploads/`).
 - `DB_URI` – SQLAlchemy database URI (default: `sqlite:///database.db`).
-- `SECRET_KEY` – Flask secret key used for sessions.
+- `SECRET_KEY` – Flask secret key used for sessions (required).
 - `MAX_CONTENT_LENGTH` – maximum allowed upload size in bytes (default: 5 MB).
-
-If these variables are not provided the defaults above are used.
+If not set, the application uses the defaults above except for `SECRET_KEY`, which must be provided.
 
 ## Production Deployment
 
