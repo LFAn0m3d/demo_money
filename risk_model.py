@@ -74,3 +74,6 @@ def calculate_risk(data: dict) -> float:
 
     risk = (iso_score + auto_score) / 2
     return round(risk, 2)
+
+# Load models once when module is imported
+load_models()

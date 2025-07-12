@@ -26,11 +26,15 @@ class OCRDependencyError(Exception):
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import CSRFProtect  # ✅ เพิ่ม CSRF protection
 from risk_model import calculate_risk
+import logging
+from logging.handlers import RotatingFileHandler
 
 # === CONFIG ===
 UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
 DB_PATH = os.getenv('DB_URI', 'sqlite:///database.db')
-SECRET_KEY = os.getenv('SECRET_KEY', 'supersecretkey')
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError('SECRET_KEY environment variable is required')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 ALLOWED_MIME_TYPES = {
@@ -45,6 +49,17 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 app.secret_key = SECRET_KEY
 csrf = CSRFProtect(app)  # ✅ ใช้งาน CSRF
+
+# Setup logging
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+file_handler = RotatingFileHandler('logs/money_guardian.log', maxBytes=10240, backupCount=10)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+))
+file_handler.setLevel(logging.INFO)
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.INFO)
 
 # === DATABASE MODEL ===
 Base = declarative_base()
@@ -185,7 +200,8 @@ def index():
                 data = process_slip_with_tesseract(filepath)
             except OCRDependencyError as e:
                 os.remove(filepath)
-                error_msg = str(e)
+                app.logger.error(f"OCR processing failed: {str(e)}")
+                error_msg = "ไม่สามารถประมวลผลสลิปได้ในขณะนี้"
                 data = None
             if data is not None and error_msg is None:
                 risk_score = calculate_risk(data)
@@ -293,11 +309,19 @@ def user_list():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = request.form['password']
-        email = request.form['email']  # ✅ บังคับให้ต้องมีอีเมล
-        if not email:
-            return 'กรุณากรอกอีเมล'
+        email = request.form['email'].strip()
+
+        if len(username) < 3 or len(username) > 50:
+            return 'Username must be 3-50 characters'
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            return 'Username can only contain letters, numbers, and underscores'
+        if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+            return 'Invalid email address'
+        if len(password) < 6:
+            return 'Password must be at least 6 characters'
+
         hashed_pw = generate_password_hash(password)
         with Session() as session_db:
             existing_user = session_db.query(User).filter_by(username=username).first()
